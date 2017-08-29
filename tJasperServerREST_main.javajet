@@ -1,0 +1,67 @@
+<%@ jet 
+	imports="
+		org.talend.core.model.process.INode 
+		org.talend.core.model.process.ElementParameterParser 
+		org.talend.core.model.metadata.IMetadataTable 
+		org.talend.core.model.metadata.IMetadataColumn 
+		org.talend.core.model.process.IConnection
+		org.talend.core.model.process.IConnectionCategory
+		org.talend.designer.codegen.config.CodeGeneratorArgument
+		org.talend.core.model.metadata.types.JavaTypesManager
+		org.talend.core.model.metadata.types.JavaType
+		java.util.List 
+    	java.util.Map		
+	" 
+%>
+<% 
+    CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
+    INode node = (INode)codeGenArgument.getArgument();
+    String cid = node.getUniqueName();
+    
+	String jasperUsername = ElementParameterParser.getValue(node, "__JASPER_USERNAME__");
+	String jasperPassword = ElementParameterParser.getValue(node, "__JASPER_PASSWORD__");
+	
+	String reportURI = ElementParameterParser.getValue(node, "__REPORT_URI__");
+	String fileName = ElementParameterParser.getValue(node, "__FILE_NAME__");
+	String destination = ElementParameterParser.getValue(node, "__DESTINATION__");	
+	String reportType = ElementParameterParser.getValue(node, "__REPORT_TYPE__");
+	String fullPathFile = destination + " + \"/\"+" + fileName+ " + \".\" + " + "\"" +reportType.toLowerCase()+ "\"";
+	List<Map<String, String>> params = (List<Map<String,String>>)ElementParameterParser.getObjectValue(node, "__REPORT_PARAMETERS__");
+%>
+
+		com.jaspersoft.jasperserver.jaxrs.client.core.operationresult.OperationResult<java.io.InputStream> result_<%=cid%> = client_<%=cid%>
+                .authenticate(<%=jasperUsername%>, <%=jasperPassword%>)
+                .reportingService()
+                .report(<%=reportURI%>)
+                .prepareForRun(com.jaspersoft.jasperserver.jaxrs.client.apiadapters.reporting.ReportOutputFormat.<%=reportType%>)
+<%
+int i = -1;
+int size = params.size();
+while (++i < size) {
+	Map<String, String> p = params.get(i);
+	String name = p.get("NAME");
+	String value = p.get("VALUE");
+%>
+	.parameter(<%=name %>, <%=value %>)
+<% } %>
+                .run();
+        java.io.InputStream report_<%=cid%> = result_<%=cid%>.getEntity();
+
+
+        java.io.File file_<%=cid%> = new java.io.File(<%=fullPathFile%>);
+        java.io.OutputStream outputStream_<%=cid%> = null;
+        try {
+            outputStream_<%=cid%> = new java.io.FileOutputStream(file_<%=cid%>);
+        } catch (java.io.FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        try {
+            org.apache.commons.io.IOUtils.copy(report_<%=cid%>, outputStream_<%=cid%>);
+        } catch (java.io.IOException e) {
+            e.printStackTrace();
+        }
+        try {
+            outputStream_<%=cid%>.close();
+        } catch (java.io.IOException e) {
+            e.printStackTrace();
+        }

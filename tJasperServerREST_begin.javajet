@@ -1,0 +1,31 @@
+<%@ jet 
+	imports="
+		org.talend.core.model.process.INode 
+		org.talend.core.model.process.ElementParameterParser 
+		org.talend.core.model.metadata.IMetadataTable 
+		org.talend.core.model.metadata.IMetadataColumn 
+		org.talend.core.model.process.IConnection
+		org.talend.core.model.process.IConnectionCategory
+		org.talend.designer.codegen.config.CodeGeneratorArgument
+		org.talend.core.model.metadata.types.JavaTypesManager
+		org.talend.core.model.metadata.types.JavaType
+		java.util.List 
+    	java.util.Map	
+    	
+
+	" 
+%>
+<% 
+    CodeGeneratorArgument codeGenArgument = (CodeGeneratorArgument) argument;
+    INode node = (INode)codeGenArgument.getArgument();
+    String cid = node.getUniqueName();
+    
+    String serverURL = ElementParameterParser.getValue(node, "__SERVER_URL__");
+
+%>	
+    
+        com.jaspersoft.jasperserver.jaxrs.client.core.RestClientConfiguration configuration_<%=cid%> = new com.jaspersoft.jasperserver.jaxrs.client.core.RestClientConfiguration(<%=serverURL%>);
+        configuration_<%=cid%>.setAcceptMimeType(com.jaspersoft.jasperserver.jaxrs.client.core.enums.MimeType.JSON).setContentMimeType(com.jaspersoft.jasperserver.jaxrs.client.core.enums.MimeType.JSON).setJrsVersion(com.jaspersoft.jasperserver.jaxrs.client.core.enums.JRSVersion.v6_1_0).setLogHttp(true);
+        configuration_<%=cid%>.setAuthenticationType(com.jaspersoft.jasperserver.jaxrs.client.core.enums.AuthenticationType.BASIC);
+        com.jaspersoft.jasperserver.jaxrs.client.core.JasperserverRestClient client_<%=cid%> = new com.jaspersoft.jasperserver.jaxrs.client.core.JasperserverRestClient(configuration_<%=cid%>);
+
